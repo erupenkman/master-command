@@ -1,0 +1,41 @@
+{
+  "name": "gulp-master-command",
+  "version": "0.0.0",
+  "description": "A plugin for Gulp",
+  "keywords": [
+    "gulpplugin"
+  ],
+  "author": {
+    "name": "",
+    "email": "",
+    "url": "https://github.com/erupenkman"
+  },
+  "repository": "erupenkman/gulp-master-command",
+  "scripts": {
+    "test": "istanbul test _mocha --report html -- test/*.js --reporter spec",
+    "coveralls": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+  },
+  "dependencies": {
+    "express": "^4.4.5",
+    "gulp-util": "~2.2.0",
+    "socket.io": "^1.0.6",
+    "socket.io-client": "^1.0.6",
+    "through2": "*"
+  },
+  "devDependencies": {
+    "connect": "^2.21.1",
+    "coveralls": "*",
+    "event-stream": "*",
+    "gulp-connect": "^2.0.5",
+    "gulp-nodemon": "^1.0.4",
+    "istanbul": "*",
+    "mocha": "*",
+    "mocha-lcov-reporter": "*",
+    "should": "~2.1.0"
+  },
+  "engines": {
+    "node": ">=0.8.0",
+    "npm": ">=1.2.10"
+  },
+  "license": "MIT"
+}
