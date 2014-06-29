@@ -4,7 +4,7 @@ var gulp = require('gulp'),
 
 gulp.task('command', function() {
   nodemon({
-    script: 'command.js',
+    script: 'server.js',
     ext: 'js',
     ignore: ['test/**/*', 'master.js'],
     nodeArgs: ['--debug']

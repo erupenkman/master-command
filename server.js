@@ -38,11 +38,12 @@ io.on('connection', function(socket) {
   });
 });
 
+
 app.get('/socket.js-client', function(req, res) {
-  res.sendfile('node_modules/socket.io-client/socket.io.js');
+  res.sendfile(__dirname + '/node_modules/socket.io-client/socket.io.js');
 });
 app.get('/master-command', function(req, res) {
-  res.sendfile('master.js');
+  res.sendfile(__dirname + '/master.js');
 });
 
 
