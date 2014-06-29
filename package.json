@@ -1,26 +1,24 @@
 {
-  "name": "gulp-master-command",
-  "version": "0.0.0",
-  "description": "A plugin for Gulp",
+  "name": "master-command",
+  "version": "0.0.1",
+  "description": "Drive all devices from one place to test multiple browsers and devices",
   "keywords": [
-    "gulpplugin"
+    "browsers testing devices development"
   ],
   "author": {
-    "name": "",
-    "email": "",
+    "name": "Eru",
+    "email": "penkman.eru@gmail.com",
     "url": "https://github.com/erupenkman"
   },
-  "repository": "erupenkman/gulp-master-command",
+  "repository": "erupenkman/master-command",
   "scripts": {
     "test": "istanbul test _mocha --report html -- test/*.js --reporter spec",
     "coveralls": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "dependencies": {
     "express": "^4.4.5",
-    "gulp-util": "~2.2.0",
     "socket.io": "^1.0.6",
     "socket.io-client": "^1.0.6",
-    "through2": "*"
   },
   "devDependencies": {
     "connect": "^2.21.1",
@@ -31,7 +29,9 @@
     "istanbul": "*",
     "mocha": "*",
     "mocha-lcov-reporter": "*",
-    "should": "~2.1.0"
+    "should": "~2.1.0",
+    "gulp-util": "~2.2.0",
+    "through2": "*"
   },
   "engines": {
     "node": ">=0.8.0",

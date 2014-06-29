@@ -5,12 +5,12 @@ var gulp = require('gulp'),
 gulp.task('command', function() {
   nodemon({
     script: 'command.js',
-    ext: 'html js',
-    ignore: ['ignored.js'],
+    ext: 'js',
+    ignore: ['test/**/*', 'master.js'],
     nodeArgs: ['--debug']
   })
     .on('restart', function() {
-      console.log('restarted!')
+
     })
 });
 
@@ -29,7 +29,7 @@ gulp.task('connect', function() {
 });
 
 gulp.task('watch', function() {
-  gulp.watch(['./test/fixtures/*.*'], ['reload']);
+  gulp.watch(['./test/fixtures/*.*', 'master.js'], ['reload']);
 });
 gulp.task('server', ['connect', 'watch']);
 gulp.task('both', function() {

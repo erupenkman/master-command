@@ -28,18 +28,26 @@ var server = app.listen(8001, function() {
 
 var io = require('socket.io')(server);
 io.on('connection', function(socket) {
+  socket.on('hello', function(data) {
+    console.log(data + ' connected');
+  });
+
   socket.on('click', function(data) {
     console.log('it hapened', data);
     socket.broadcast.emit('master-clicked', data);
   });
 });
+
 app.get('/socket.js-client', function(req, res) {
   res.sendfile('node_modules/socket.io-client/socket.io.js');
+});
+app.get('/master-command', function(req, res) {
+  res.sendfile('master.js');
 });
 
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "http://192.168.1.3:8000");
+  res.header("Access-Control-Allow-Origin", ipAddress + ":*");
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Headers", "X-Requested-With");
   res.header("Access-Control-Allow-Headers", "Content-Type");
