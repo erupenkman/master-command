@@ -1,6 +1,6 @@
 {
   "name": "master-command",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Drive all devices from one place to test multiple browsers and devices",
   "keywords": [
     "browsers testing devices development"
