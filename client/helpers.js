@@ -1,34 +1,24 @@
-window.masterCommand = (function() {
-  var clickedByMaster = null;
-  var socket = null;
-  var deviceId = 'device_' + Math.floor(Math.random() * 100);
-  var init = function(ipAddress) {
-      if (!ipAddress) {
-        console.err('I need the IP address of the MasterCommand server');
+var masterCommand = masterCommand || {};
+
+(function() {
+  //thanks http://stackoverflow.com/questions/1421584/how-can-i-simulate-a-click-to-an-anchor-tag
+  masterCommand.fakeClick = function(event, anchorObj) {
+    if (anchorObj.click) {
+      anchorObj.click()
+    } else if (document.createEvent) {
+      if (event.target !== anchorObj) {
+        var evt = document.createEvent("MouseEvents");
+        evt.initMouseEvent("click", true, true, window,
+          0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        var allowDefault = anchorObj.dispatchEvent(evt);
+        // you can check allowDefault for false to see if
+        // any handler called evt.preventDefault().
+        // Firefox will *not* redirect to anchorObj.href
+        // for you. However every other browser will.
       }
-      socket = io(ipAddress);
-      socket.emit('hello', deviceId);
-      socket.on('master-clicked', function(data) {
-        var clickedNode = lookupElementByXPath(data);
-        clickedByMaster = clickedNode;
-        $(clickedNode).click();
-      });
-
-      $('*').click(function(e) {
-        if (this !== e.target) {
-          return;
-        } else if (this === clickedByMaster) {
-          clickedByMaster = null;
-          return;
-        }
-        var xPath = createXPathFromElement(this);
-        socket.emit('click', xPath);
-
-      });
     }
-    //from http://stackoverflow.com/questions/2661818/javascript-get-xpath-of-a-node
-
-  function createXPathFromElement(elm) {
+  };
+  masterCommand.createXPathFromElement = function(elm) {
     var allNodes = document.getElementsByTagName('*');
     for (var segs = []; elm && elm.nodeType == 1; elm = elm.parentNode) {
       if (elm.hasAttribute('id')) {
@@ -55,12 +45,21 @@ window.masterCommand = (function() {
     return segs.length ? '/' + segs.join('/') : null;
   };
 
-  function lookupElementByXPath(path) {
+  masterCommand.lookupElementByXPath = function(path) {
     var evaluator = new XPathEvaluator();
     var result = evaluator.evaluate(path, document.documentElement, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     return result.singleNodeValue;
   }
-  return {
-    init: init
-  }
+
+  masterCommand.createOrGetCookie = function() {
+    var fromCookie = $.cookie('masterClientId');
+    if (fromCookie) {
+      return fromCookie;
+    } else {
+      var clientId = 'device_' + Math.floor(Math.random() * 100)
+      $.cookie('masterClientId', clientId);
+      return clientId;
+    }
+
+  };
 })();

@@ -1,0 +1,26 @@
+{
+  "name": "master-client",
+  "version": "0.0.0",
+  "homepage": "https://github.com/erupenkman/master-command",
+  "authors": [
+    "Eru Penkman <eru.penkman@gmail.com>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery.cookie": "~1.4.1"
+  },
+  "devDependencies": {
+    "chai": "~1.9.1",
+    "sinon": "http://sinonjs.org/releases/sinon-1.9.0.js",
+
+    "jasmine": "~2.0.0"
+  }
+}

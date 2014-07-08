@@ -18,10 +18,12 @@
   "dependencies": {
     "express": "^4.4.5",
     "socket.io": "^1.0.6",
-    "socket.io-client": "^1.0.6"
+    "socket.io-client": "^1.0.6",
+    "underscore": "^1.6.0"
   },
   "devDependencies": {
     "connect": "^2.21.1",
+    "connect-injector": "^0.2.3",
     "coveralls": "*",
     "event-stream": "*",
     "gulp-connect": "^2.0.5",

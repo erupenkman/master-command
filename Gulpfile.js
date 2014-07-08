@@ -1,6 +1,37 @@
 var gulp = require('gulp'),
   nodemon = require('gulp-nodemon'),
-  connect = require('gulp-connect');
+  connect = require('gulp-connect'),
+  inject = require('connect-injector');
+
+var injectMaster =
+  '<script src="http://_IP_ADDRESS_:35729/livereload.js"></script>' +
+  '<script src="http://_IP_ADDRESS_:8001/socket.js-client"></script>' +
+
+  '<script src="http://_IP_ADDRESS_:8001/helpers"></script>' +
+  '<script src="http://_IP_ADDRESS_:8001/master-command"></script>' +
+
+  ' <script>' +
+  'masterCommand.init(\'http://_IP_ADDRESS_:8001\');' +
+  ' </script>'
+var getIpAddress = function() {
+  //thanks dude http://jbavari.github.io/blog/2013/12/04/automating-local-ip-lookup-with-grunt-and-node/
+  var os = require('os');
+  var ifaces = os.networkInterfaces();
+  var lookupIpAddress = 'localhost';
+  for (var dev in ifaces) {
+    if (dev != "en1" && dev != "en0") {
+      continue;
+    }
+    for (var i in ifaces[dev]) {
+      var details = ifaces[dev][i];
+      if (details.family == 'IPv4') {
+        lookupIpAddress = details.address;
+        break;
+      }
+    }
+  }
+  return lookupIpAddress;
+};
 
 gulp.task('command', function() {
   nodemon({
@@ -22,9 +53,19 @@ gulp.task('reload', function() {
 
 gulp.task('connect', function() {
   connect.server({
-    root: './test/fixtures/',
+    root: './client',
     livereload: true,
-    port: 8000
+    port: 8000,
+    middleware: function(connect, opt) {
+      return [inject(function when(req, res) {
+        var contetType = res.getHeader('content-type');
+        var isHtml = contetType && contetType.indexOf('html') !== -1;
+        return isHtml;
+      }, function converter(callback, content, req, res) {
+        var ipAddress = getIpAddress();
+        callback(null, content + injectMaster.replace(/_IP_ADDRESS_/g, ipAddress));
+      })];
+    }
   });
 });
 
