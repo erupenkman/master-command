@@ -1,18 +1,19 @@
 var masterCommand = masterCommand || {};
+masterCommand.io = io;
 
 (function() {
-  var clickedByMaster = null;
-  var socket = null;
+  var clickedByMaster = null; //prevent infinite loop
+  masterCommand.socket = null;
   var deviceId = masterCommand.createOrGetCookie();
 
   function sayHello() {
-    socket.emit('hello', {
+    masterCommand.socket.emit('hello', {
       deviceId: deviceId
     });
   }
   masterCommand.reset = function() {
     var path = window.location.href;
-    socket.emit('reset', {
+    masterCommand.socket.emit('reset', {
       url: path
     });
   }
@@ -46,26 +47,65 @@ var masterCommand = masterCommand || {};
       for (var i = 0; i < unCompletedMoves.length; i++) {
 
       }
-      socket.emit('playMove', {
+      masterCommand.socket.emit('playMove', {
         deviceId: deviceId,
         hash: unCompletedMoves[0].hash
       });
-      masterCommand.masterClick(unCompletedMoves[0].xPath);
+      var move = unCompletedMoves[0];
+      if (move.type === 'click') {
+        masterCommand.masterClick(move.xPath);
+      } else if (move.type === 'keyPress') {
+        masterCommand.masterKeyPress(move);
+      }
     }
   }
+  masterCommand.masterKeyPress = function(move) {
+    if (!move.xPath) {
+      console.error('cannot replay keyPress of: ', move.xPath);
+      return
+    }
+    var clickedNode = masterCommand.lookupElementByXPath(move.xPath);
+    clickedByMaster = clickedNode;
+    if (!clickedNode) {
+      console.error('cannot replay click of: ', move.xPath);
+      return;
+    }
+    console.debug('replay keypress: ', move);
+    masterCommand.fakeKeyPress(clickedNode, move.keyCode);
+  };
+  masterCommand.recordKeyPress = function(e) {
+    var keyCode = e.which;
+    var xPath = masterCommand.createXPathFromElement(e.target);
+    masterCommand.socket.emit('event', {
+      type: 'keyPress',
+      xPath: xPath,
+      deviceId: deviceId,
+      hash: Math.floor(Math.random() * 1000),
+      keyCode: keyCode
+    });
+  };
+  masterCommand.recordClick = function(e) {
+    var xPath = masterCommand.createXPathFromElement(e.target);
+    masterCommand.socket.emit('event', {
+      type: 'click',
+      xPath: xPath,
+      deviceId: deviceId,
+      hash: Math.floor(Math.random() * 1000)
+    });
+  };
   masterCommand.init = function(ipAddress) {
     if (!ipAddress) {
       console.error('I need the IP address of the MasterCommand server');
       return;
     }
-    socket = io(ipAddress);
-    socket.on('hello', sayHello);
-    socket.on('update', function(data) {
-      console.log('update', data);
+    masterCommand.socket = masterCommand.io(ipAddress);
+    masterCommand.socket.on('hello', sayHello);
+    masterCommand.socket.on('update', function(data) {
+      console.debug('update', data);
       masterCommand.handleMove(data);
     });
-    socket.on('reset', function(data) {
-      console.log('reset to:', data.url);
+    masterCommand.socket.on('reset', function(data) {
+      console.debug('reset to:', data.url);
       window.location.href = data.url;
     });
     $('*').keypress(function(e) {
@@ -75,7 +115,8 @@ var masterCommand = masterCommand || {};
         clickedByMaster = null;
         return;
       }
-      console.log(e);
+      masterCommand.recordKeyPress(e);
+      console.debug('pressed key: ', e);
     });
     $('*').click(function(e) {
       if (this !== e.target) {
@@ -84,12 +125,7 @@ var masterCommand = masterCommand || {};
         clickedByMaster = null;
         return;
       }
-      var xPath = masterCommand.createXPathFromElement(this);
-      socket.emit('event', {
-        xPath: xPath,
-        deviceId: deviceId,
-        hash: Math.floor(Math.random() * 1000)
-      });
+      masterCommand.recordClick(e);
 
     });
   };

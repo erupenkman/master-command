@@ -11,9 +11,11 @@
 
   <h1><i>Test Form</i></h1>
   <a href="test.html">go back</a>
-  <form action="javascript:console.log('submit')">
-    <input type="text" placeholder="enter text"/>
+  <form id="test-form">
+    <input id="input1" type="text" placeholder="enter text"/>
     <button type="submit"> submit </button>
+    <span id="output"></span>
   </form>
-
+  <script src="../../bower_components/jquery/dist/jquery.js"></script>
+  <script src="test-form-script.js"></script>
 </body>

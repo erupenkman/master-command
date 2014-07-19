@@ -1,6 +1,15 @@
 var masterCommand = masterCommand || {};
-
 (function() {
+  masterCommand.fakeKeyPress = function(node, keyCode) {
+    //todo: use a real plugin here
+    var original = $(node).val();
+    var updated = original + String.fromCharCode(keyCode);
+    $(node).val(updated);
+    $(node).trigger({
+      type: 'keypress',
+      which: keyCode
+    });
+  };
   //thanks http://stackoverflow.com/questions/1421584/how-can-i-simulate-a-click-to-an-anchor-tag
   masterCommand.fakeClick = function(event, anchorObj) {
     if (anchorObj.click) {

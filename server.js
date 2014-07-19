@@ -66,19 +66,16 @@ exports.getDevice = function(index) {
   return allDevices[index];
 }
 
-exports.onUpdate = function(data) {
-  console.log('it hapened', data);
-  var masterDevice = exports.matchDevice(data.deviceId);
+exports.onUpdate = function(lastMove) {
+  console.log('it hapened', lastMove);
+  var masterDevice = exports.matchDevice(lastMove.deviceId);
   if (!masterDevice) {
     console.error('device not found');
     return;
   }
-  masterDevice.lastMoveHash = data.hash;
+  masterDevice.lastMoveHash = lastMove.hash;
 
-  moves.push({
-    xPath: data.xPath,
-    hash: data.hash
-  });
+  moves.push(lastMove);
   for (var i = 0; i < allDevices.length; i++) {
     var device = allDevices[i];
     device.socket.emit('update', {

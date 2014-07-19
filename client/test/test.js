@@ -1,19 +1,55 @@
 var expect = chai.expect;
+var assert = sinon.assert;
 describe("master", function() {
   var sandbox = null;
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
+    sandbox.stub(masterCommand.socket, 'emit', function() {
+      console.log('emit', arguments);
+    });
+    sandbox.stub(masterCommand.socket, 'on', function() {
+      console.log('on', arguments);
+    });
     $.removeCookie('masterClientId')
   });
   afterEach(function() {
     sandbox.restore();
   });
-  describe('fakeClick', function() {
+  describe('recordKeypress', function() {
+    it('should emit a correct keypress event', function() {
+      sandbox.stub(masterCommand, 'createXPathFromElement', function() {
+        return 'testXPath';
+      })
+      masterCommand.recordKeyPress({
+        which: 'theKey'
+      });
+
+      assert.calledWithMatch(masterCommand.socket.emit, function(arg1) {
+        return arg1 === 'event';
+      }, function(arg2) {
+        return arg2.xPath === 'testXPath' && arg2.keyCode === 'theKey';
+      });
+
+    });
+  });
+  describe('recordClick', function() {
+    it('should emit a correct click event', function() {
+      sandbox.stub(masterCommand, 'createXPathFromElement', function() {
+        return 'testXPath';
+      })
+      masterCommand.recordClick({});
+
+      assert.calledWithMatch(masterCommand.socket.emit, function(arg1) {
+        return arg1 === 'event';
+      }, function(arg2) {
+        return arg2.xPath === 'testXPath' && arg2.type === 'click' && arg2.keyCode === undefined;
+      });
+    });
+  });
+  describe('masterKeyPress', function() {
 
   });
   describe('createOrGetCookie', function() {
-
-
     it("should create a new cookie", function() {
       sandbox.stub(jQuery, "cookie", function(arg1, arg2) {
         if (arg2 == null) {
@@ -32,12 +68,15 @@ describe("master", function() {
       masterCommand.handleMove({
         lastMoveHash: 'h2',
         moves: [{
+          type: 'click',
           hash: 'h1',
           xPath: '1'
         }, {
+          type: 'click',
           hash: 'h2',
           xPath: '2'
         }, {
+          type: 'click',
           hash: 'h3',
           xPath: '3'
         }]

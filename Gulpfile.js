@@ -48,7 +48,8 @@ gulp.task('command', function() {
 });
 
 gulp.task('reload', function() {
-  gulp.src('./test/fixtures/*.*')
+
+  gulp.src(['./client/**/*.html'])
     .pipe(connect.reload());
 });
 
@@ -72,7 +73,7 @@ gulp.task('connect', function() {
 });
 
 gulp.task('watch', function() {
-  gulp.watch(['./test/fixtures/*.*', 'master.js'], ['reload']);
+  gulp.watch(['./client/**/*'], ['reload']);
 });
 gulp.task('server', ['connect', 'watch']);
 gulp.task('both', function() {
