@@ -5,6 +5,8 @@ var gulp = require('gulp'),
 
 var injectMaster =
   '<script src="http://_IP_ADDRESS_:35729/livereload.js"></script>' +
+  '<script src="http://_IP_ADDRESS_:8001/jquery"></script>' +
+  '<script src="http://_IP_ADDRESS_:8001/jquery.cookie"></script>' +
   '<script src="http://_IP_ADDRESS_:8001/socket.js-client"></script>' +
 
   '<script src="http://_IP_ADDRESS_:8001/helpers"></script>' +

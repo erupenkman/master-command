@@ -1,6 +1,6 @@
 {
   "name": "master-command",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Drive all devices from one place to test multiple browsers and devices",
   "keywords": [
     "browsers testing devices development"
@@ -17,8 +17,10 @@
   },
   "dependencies": {
     "express": "^4.4.5",
+    "jquery": "^2.1.1",
     "socket.io": "^1.0.6",
     "socket.io-client": "^1.0.6",
+    "jquery.cookie": "^1.4.1",
     "underscore": "^1.6.0"
   },
   "devDependencies": {

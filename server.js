@@ -87,7 +87,20 @@ exports.onUpdate = function(data) {
     });
   }
 }
+
+exports.reset = function(url) {
+  for (var i = 0; i < allDevices.length; i++) {
+    var device = allDevices[i];
+    device.lastMoveHash = '';
+    device.socket.emit('reset', {
+      url: url
+    });
+  }
+  moves = [];
+};
+
 io.on('connection', function(socket) {
+  socket.emit('hello');
   socket.on('hello', function(data) {
     console.log('deviceId', data.deviceId);
     if (!data.deviceId) {
@@ -100,17 +113,28 @@ io.on('connection', function(socket) {
       lastMoveHash: device.lastMoveHash
     });
   });
-  socket.on('click', function(data) {
+  socket.on('event', function(data) {
     exports.onUpdate(data);
   });
   socket.on('playMove', function(data) {
     var device = exports.matchDevice(data.deviceId);
     device.lastMoveHash = data.hash;
-
+  });
+  socket.on('reset', function(data) {
+    if (!data) {
+      data = {};
+    }
+    exports.reset(data.url);
   });
 });
 
 //todo: break these out
+app.get('/jquery', function(req, res) {
+  res.sendfile(__dirname + '/node_modules/jquery/dist/jquery.js');
+});
+app.get('/jquery.cookie', function(req, res) {
+  res.sendfile(__dirname + '/node_modules/jquery.cookie/jquery.cookie.js');
+});
 app.get('/socket.js-client', function(req, res) {
   res.sendfile(__dirname + '/node_modules/socket.io-client/socket.io.js');
 });
