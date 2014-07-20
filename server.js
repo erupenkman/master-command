@@ -30,6 +30,7 @@ var server = app.listen(8001, function() {
 var io = require('socket.io')(server);
 var allDevices = [];
 var moves = [];
+var stopped = false;
 exports.getMoves = function() {
   return moves;
 }
@@ -86,38 +87,75 @@ exports.onUpdate = function(lastMove) {
 }
 
 exports.reset = function(url) {
-  for (var i = 0; i < allDevices.length; i++) {
-    var device = allDevices[i];
+  stopped = false;
+  _.forEach(allDevices, function(device) {
     device.lastMoveHash = '';
+    console.log('resetting device', device.id);
     device.socket.emit('reset', {
       url: url
     });
+  });
+  allDevices = [];
+  moves = [];
+};
+
+exports.stop = function() {
+  stopped = true;
+  for (var i = 0; i < allDevices.length; i++) {
+    var device = allDevices[i];
+    device.lastMoveHash = '';
+    device.socket.emit('stop');
   }
   moves = [];
 };
 
 io.on('connection', function(socket) {
-  socket.emit('hello');
+  //if existing servers are open..
+  socket.emit('hello', {
+    stopped: stopped
+  });
   socket.on('hello', function(data) {
     console.log('deviceId', data.deviceId);
+    console.log('allDevices', allDevices.length);
     if (!data.deviceId) {
       console.error('device attempted to connect without an id');
       return;
     }
     var device = exports.matchDevice(data.deviceId, socket);
+    if (stopped) {
+      //must match with the device before returning
+      return;
+    }
     socket.emit('update', {
       moves: moves,
       lastMoveHash: device.lastMoveHash
     });
   });
   socket.on('event', function(data) {
+    if (stopped) {
+      return;
+    }
     exports.onUpdate(data);
   });
   socket.on('playMove', function(data) {
+    if (stopped) {
+      return;
+    }
     var device = exports.matchDevice(data.deviceId);
     device.lastMoveHash = data.hash;
   });
   socket.on('reset', function(data) {
+    console.log('reset', allDevices);
+    if (!data) {
+      data = {};
+    }
+    exports.reset(data.url);
+  });
+  socket.on('stop', function(data) {
+    console.log('stop');
+    exports.stop();
+  });
+  socket.on('start', function(data) {
     if (!data) {
       data = {};
     }

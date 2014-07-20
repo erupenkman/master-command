@@ -19,11 +19,14 @@ var injectMaster =
   '     left: 0;' +
   '     background: white;' +
   '   }' +
+  '   .master-bar.stopped {' +
+  '     background: #FCC;' +
+  '   }' +
   '</style>' +
   '<div class="master-bar"> Reflector ' +
-  '   <a href="javascript:masterCommand.reset()">Reset</a>' +
-  '   <a href="javascript:masterCommand.stop()">Stop</a>' +
-  '   <a href="javascript:masterCommand.stop()">Start</a>' +
+  '   <a href="javascript:;"id="mc-reset">Reset</a>' +
+  '   <a href="javascript:;" id="mc-stop">Stop</a>' +
+  '   <a href="javascript:;" id="mc-start">Start</a>' +
   '</div>' +
   '<script>' +
   '   masterCommand.init(\'http://_IP_ADDRESS_:8001\');' +
