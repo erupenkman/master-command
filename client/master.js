@@ -17,15 +17,6 @@ masterCommand.io = io;
       url: path
     });
   }
-  masterCommand.masterClick = function(xPath) {
-    var clickedNode = masterCommand.lookupElementByXPath(xPath);
-    clickedByMaster = clickedNode;
-    if (!clickedNode) {
-      console.error('cannot replay click of: ', xPath);
-      return;
-    }
-    masterCommand.fakeClick(null, clickedNode);
-  }
   masterCommand.handleMove = function(data) {
     if (data.moves === undefined || data.moves.length === undefined) {
       console.error('no moves recieved');
@@ -45,26 +36,38 @@ masterCommand.io = io;
     if (unCompletedMoves.length > 0) {
       //tell command about the move
       for (var i = 0; i < unCompletedMoves.length; i++) {
+        masterCommand.socket.emit('playMove', {
+          deviceId: deviceId,
+          hash: unCompletedMoves[i].hash
+        });
+        var move = unCompletedMoves[i];
+        if (move.type === 'click') {
+          masterCommand.masterClick(move.xPath);
+        } else if (move.type === 'keyPress') {
+          masterCommand.masterKeyPress(move);
+        } else if (move.type === 'scroll') {
+          masterCommand.masterScroll(move);
+        }
+      }
 
-      }
-      masterCommand.socket.emit('playMove', {
-        deviceId: deviceId,
-        hash: unCompletedMoves[0].hash
-      });
-      var move = unCompletedMoves[0];
-      if (move.type === 'click') {
-        masterCommand.masterClick(move.xPath);
-      } else if (move.type === 'keyPress') {
-        masterCommand.masterKeyPress(move);
-      }
     }
   }
+  masterCommand.masterClick = function(xPath) {
+    var clickedNode = masterCommand.getElement(xPath);
+    clickedByMaster = clickedNode;
+    if (!clickedNode) {
+      console.error('cannot replay click of: ', xPath);
+      return;
+    }
+    masterCommand.fakeClick(null, clickedNode);
+  };
+
   masterCommand.masterKeyPress = function(move) {
     if (!move.xPath) {
       console.error('cannot replay keyPress of: ', move.xPath);
       return
     }
-    var clickedNode = masterCommand.lookupElementByXPath(move.xPath);
+    var clickedNode = masterCommand.getElement(move.xPath);
     clickedByMaster = clickedNode;
     if (!clickedNode) {
       console.error('cannot replay click of: ', move.xPath);
@@ -73,26 +76,56 @@ masterCommand.io = io;
     console.debug('replay keypress: ', move);
     masterCommand.fakeKeyPress(clickedNode, move.keyCode);
   };
+
+  masterCommand.masterScroll = function(move) {
+    if (!move.xPath) {
+      console.error('cannot replay keyPress of: ', move.xPath);
+      return;
+    }
+    var scrolledNode = masterCommand.getElement(move.xPath);
+    clickedByMaster = scrolledNode;
+    if (!scrolledNode) {
+      console.error('cannot replay scroll of: ', move.xPath);
+      return;
+    }
+    console.debug('replay scroll: ', move);
+    masterCommand.fakeScroll(scrolledNode, move.scrollTop);
+  };
+
   masterCommand.recordKeyPress = function(e) {
     var keyCode = e.which;
-    var xPath = masterCommand.createXPathFromElement(e.target);
+    var xPath = masterCommand.getXpath(e.target);
     masterCommand.socket.emit('event', {
       type: 'keyPress',
       xPath: xPath,
       deviceId: deviceId,
-      hash: Math.floor(Math.random() * 1000),
+      hash: Math.floor(Math.random() * 100000),
       keyCode: keyCode
     });
   };
   masterCommand.recordClick = function(e) {
-    var xPath = masterCommand.createXPathFromElement(e.target);
+    var xPath = masterCommand.getXpath(e.target);
     masterCommand.socket.emit('event', {
       type: 'click',
       xPath: xPath,
       deviceId: deviceId,
-      hash: Math.floor(Math.random() * 1000)
+      hash: Math.floor(Math.random() * 100000)
     });
   };
+  masterCommand.recordScroll = function(e) {
+    var xPath = masterCommand.getXpath(e.target);
+    var scrollTop = $(e.target).scrollTop();
+    console.log(scrollTop);
+    masterCommand.socket.emit('event', {
+      type: 'scroll',
+      xPath: xPath,
+      deviceId: deviceId,
+      hash: Math.floor(Math.random() * 100000),
+      scrollTop: scrollTop
+    });
+  };
+  masterCommand.debouncedRecordScroll = masterCommand.debounce(masterCommand.recordScroll, 100);
+
   masterCommand.init = function(ipAddress) {
     if (!ipAddress) {
       console.error('I need the IP address of the MasterCommand server');
@@ -107,6 +140,28 @@ masterCommand.io = io;
     masterCommand.socket.on('reset', function(data) {
       console.debug('reset to:', data.url);
       window.location.href = data.url;
+    });
+    $(window).on('scroll', function(e) {
+      //use document instead of this, this is window
+      if (document !== e.target) {
+        return;
+      } else if (document === clickedByMaster) {
+        clickedByMaster = null;
+        return;
+      }
+      console.info('doScroll');
+      masterCommand.debouncedRecordScroll(e);
+
+    });
+    $('*').on('scroll', function(e) {
+      if (this !== e.target) {
+        return;
+      } else if (this === clickedByMaster) {
+        clickedByMaster = null;
+        return;
+      }
+      console.info('doScroll');
+      masterCommand.debouncedRecordScroll(e);
     });
     $('*').keypress(function(e) {
       if (this !== e.target) {
@@ -126,7 +181,6 @@ masterCommand.io = io;
         return;
       }
       masterCommand.recordClick(e);
-
     });
   };
 })();

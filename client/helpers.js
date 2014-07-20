@@ -1,5 +1,8 @@
 var masterCommand = masterCommand || {};
 (function() {
+  masterCommand.fakeScroll = function(node, scrollTop) {
+    $(node).scrollTop(scrollTop);
+  };
   masterCommand.fakeKeyPress = function(node, keyCode) {
     //todo: use a real plugin here
     var original = $(node).val();
@@ -10,6 +13,19 @@ var masterCommand = masterCommand || {};
       which: keyCode
     });
   };
+  //from underscore.js, todo: add throttling (and don't forget calls of different type);
+  masterCommand.debounce = function(func, wait) {
+    var timeout;
+    return function() {
+      var context = this,
+        args = arguments;
+      clearTimeout(timeout);
+      timeout = setTimeout(function() {
+        timeout = null;
+        func.apply(context, args);
+      }, wait);
+    };
+  }
   //thanks http://stackoverflow.com/questions/1421584/how-can-i-simulate-a-click-to-an-anchor-tag
   masterCommand.fakeClick = function(event, anchorObj) {
     if (anchorObj.click) {
@@ -27,7 +43,10 @@ var masterCommand = masterCommand || {};
       }
     }
   };
-  masterCommand.createXPathFromElement = function(elm) {
+  masterCommand.getXpath = function(elm) {
+    if (elm === document) {
+      return 'document';
+    }
     var allNodes = document.getElementsByTagName('*');
     for (var segs = []; elm && elm.nodeType == 1; elm = elm.parentNode) {
       if (elm.hasAttribute('id')) {
@@ -54,7 +73,10 @@ var masterCommand = masterCommand || {};
     return segs.length ? '/' + segs.join('/') : null;
   };
 
-  masterCommand.lookupElementByXPath = function(path) {
+  masterCommand.getElement = function(path) {
+    if (path === 'document') {
+      return document;
+    }
     var evaluator = new XPathEvaluator();
     var result = evaluator.evaluate(path, document.documentElement, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     return result.singleNodeValue;

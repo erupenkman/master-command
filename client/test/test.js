@@ -17,7 +17,7 @@ describe("master", function() {
   });
   describe('recordKeypress', function() {
     it('should emit a correct keypress event', function() {
-      sandbox.stub(masterCommand, 'createXPathFromElement', function() {
+      sandbox.stub(masterCommand, 'getXpath', function() {
         return 'testXPath';
       })
       masterCommand.recordKeyPress({
@@ -32,9 +32,25 @@ describe("master", function() {
 
     });
   });
+  describe('recordScroll', function() {
+    it('should emit a correct scroll event', function() {
+      sandbox.stub(masterCommand, 'getXpath', function() {
+        return 'window';
+      })
+      masterCommand.recordScroll({
+        target: window
+      });
+      assert.calledWithMatch(masterCommand.socket.emit, function(arg1) {
+        return arg1 === 'event';
+      }, function(arg2) {
+        return arg2.xPath === 'window';
+      });
+
+    });
+  });
   describe('recordClick', function() {
     it('should emit a correct click event', function() {
-      sandbox.stub(masterCommand, 'createXPathFromElement', function() {
+      sandbox.stub(masterCommand, 'getXpath', function() {
         return 'testXPath';
       })
       masterCommand.recordClick({});
@@ -90,7 +106,6 @@ describe("master", function() {
         moves: []
       });
       expect(masterCommand.masterClick.called).to.equal(false);
-      //that was the test
     });
 
     it("should handle shitty data", function() {
@@ -98,6 +113,27 @@ describe("master", function() {
       //that was the test
     });
   });
-
+  describe('masterScroll', function() {
+    it("should call fakeScroll", function() {
+      sandbox.stub(masterCommand, 'fakeScroll');
+      var thedocument = masterCommand.masterScroll({
+        xPath: 'document',
+        scrollTop: 7
+      });
+      assert.calledWith(masterCommand.fakeScroll, document, 7);
+    });
+  });
+  describe('getXpath', function() {
+    it("should handle document", function() {
+      var xPath = masterCommand.getXpath(document);
+      expect(xPath).to.equal('document');
+    });
+  });
+  describe('getElement', function() {
+    it("should handle document", function() {
+      var thedocument = masterCommand.getElement('document');
+      expect(thedocument).to.equal(document);
+    });
+  });
 
 });
