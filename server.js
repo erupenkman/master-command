@@ -68,7 +68,6 @@ exports.getDevice = function(index) {
 }
 
 exports.onUpdate = function(lastMove) {
-  console.log('it hapened', lastMove);
   var masterDevice = exports.matchDevice(lastMove.deviceId);
   if (!masterDevice) {
     console.error('device not found');
@@ -89,8 +88,7 @@ exports.onUpdate = function(lastMove) {
 exports.reset = function(url) {
   stopped = false;
   _.forEach(allDevices, function(device) {
-    device.lastMoveHash = '';
-    console.log('resetting device', device.id);
+    console.log('reset device: ', device.id);
     device.socket.emit('reset', {
       url: url
     });
@@ -115,8 +113,7 @@ io.on('connection', function(socket) {
     stopped: stopped
   });
   socket.on('hello', function(data) {
-    console.log('deviceId', data.deviceId);
-    console.log('allDevices', allDevices.length);
+    console.log('hello ', data.deviceId);
     if (!data.deviceId) {
       console.error('device attempted to connect without an id');
       return;
@@ -135,9 +132,11 @@ io.on('connection', function(socket) {
     if (stopped) {
       return;
     }
+    console.log('update recieved: ', data.deviceId, data.hash, data.type);
     exports.onUpdate(data);
   });
   socket.on('playMove', function(data) {
+    console.log('move repeated: ', data.deviceId, data.hash);
     if (stopped) {
       return;
     }
@@ -145,7 +144,6 @@ io.on('connection', function(socket) {
     device.lastMoveHash = data.hash;
   });
   socket.on('reset', function(data) {
-    console.log('reset', allDevices);
     if (!data) {
       data = {};
     }
