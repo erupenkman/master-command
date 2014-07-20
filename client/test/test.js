@@ -15,19 +15,21 @@ describe("master", function() {
   afterEach(function() {
     sandbox.restore();
   });
-  describe('recordKeypress', function() {
+  describe('recordChange', function() {
     it('should emit a correct keypress event', function() {
       sandbox.stub(masterCommand, 'getXpath', function() {
         return 'testXPath';
       })
-      masterCommand.recordKeyPress({
-        which: 'theKey'
+      var fakeInput = $('<input/>');
+      fakeInput.val('theVal');
+      masterCommand.recordChange({
+        target: fakeInput
       });
 
       assert.calledWithMatch(masterCommand.socket.emit, function(arg1) {
         return arg1 === 'event';
       }, function(arg2) {
-        return arg2.xPath === 'testXPath' && arg2.keyCode === 'theKey';
+        return arg2.xPath === 'testXPath' && arg2.newContent === 'theVal';
       });
 
     });
@@ -58,7 +60,7 @@ describe("master", function() {
       assert.calledWithMatch(masterCommand.socket.emit, function(arg1) {
         return arg1 === 'event';
       }, function(arg2) {
-        return arg2.xPath === 'testXPath' && arg2.type === 'click' && arg2.keyCode === undefined;
+        return arg2.xPath === 'testXPath' && arg2.type === 'click' && arg2.newContent === undefined;
       });
     });
   });

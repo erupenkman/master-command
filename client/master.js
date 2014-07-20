@@ -74,7 +74,7 @@ masterCommand.io = io;
       return;
     }
     console.debug('replay keypress: ', move);
-    masterCommand.fakeKeyPress(clickedNode, move.keyCode);
+    masterCommand.fakeKeyPress(clickedNode, move.newContent);
   };
 
   masterCommand.masterScroll = function(move) {
@@ -92,15 +92,15 @@ masterCommand.io = io;
     masterCommand.fakeScroll(scrolledNode, move.scrollTop);
   };
 
-  masterCommand.recordKeyPress = function(e) {
-    var keyCode = e.which;
+  masterCommand.recordChange = function(e) {
+    var newContent = $(e.target).val();
     var xPath = masterCommand.getXpath(e.target);
     masterCommand.socket.emit('event', {
       type: 'keyPress',
       xPath: xPath,
       deviceId: deviceId,
       hash: Math.floor(Math.random() * 100000),
-      keyCode: keyCode
+      newContent: newContent
     });
   };
   masterCommand.recordClick = function(e) {
@@ -163,14 +163,14 @@ masterCommand.io = io;
       console.info('doScroll');
       masterCommand.debouncedRecordScroll(e);
     });
-    $('*').keypress(function(e) {
+    $('*').change(function(e) {
       if (this !== e.target) {
         return;
       } else if (this === clickedByMaster) {
         clickedByMaster = null;
         return;
       }
-      masterCommand.recordKeyPress(e);
+      masterCommand.recordChange(e);
       console.debug('pressed key: ', e);
     });
     $('*').click(function(e) {

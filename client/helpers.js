@@ -3,14 +3,12 @@ var masterCommand = masterCommand || {};
   masterCommand.fakeScroll = function(node, scrollTop) {
     $(node).scrollTop(scrollTop);
   };
-  masterCommand.fakeKeyPress = function(node, keyCode) {
+  masterCommand.fakeKeyPress = function(node, updatedContents) {
     //todo: use a real plugin here
-    var original = $(node).val();
-    var updated = original + String.fromCharCode(keyCode);
-    $(node).val(updated);
+    $(node).val(updatedContents);
     $(node).trigger({
       type: 'keypress',
-      which: keyCode
+      which: null
     });
   };
   //from underscore.js, todo: add throttling (and don't forget calls of different type);

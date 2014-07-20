@@ -11,10 +11,23 @@ var injectMaster =
 
   '<script src="http://_IP_ADDRESS_:8001/helpers"></script>' +
   '<script src="http://_IP_ADDRESS_:8001/master-command"></script>' +
-
-  ' <script>' +
-  'masterCommand.init(\'http://_IP_ADDRESS_:8001\');' +
-  ' </script>'
+  '<style>' +
+  '   .master-bar {' +
+  '     font-size: 12px;' +
+  '     position: fixed;' +
+  '     bottom: 0;' +
+  '     left: 0;' +
+  '     background: white;' +
+  '   }' +
+  '</style>' +
+  '<div class="master-bar"> Reflector ' +
+  '   <a href="javascript:masterCommand.reset()">Reset</a>' +
+  '   <a href="javascript:masterCommand.stop()">Stop</a>' +
+  '   <a href="javascript:masterCommand.stop()">Start</a>' +
+  '</div>' +
+  '<script>' +
+  '   masterCommand.init(\'http://_IP_ADDRESS_:8001\');' +
+  '</script>'
 var getIpAddress = function() {
   //thanks dude http://jbavari.github.io/blog/2013/12/04/automating-local-ip-lookup-with-grunt-and-node/
   var os = require('os');
