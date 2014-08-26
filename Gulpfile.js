@@ -1,7 +1,9 @@
 var gulp = require('gulp'),
   nodemon = require('gulp-nodemon'),
   connect = require('gulp-connect'),
-  inject = require('connect-injector');
+  inject = require('connect-injector'),
+  url = require('url'),
+  httpProxy = require('http-proxy');
 
 var injectMaster =
   '<script src="http://_IP_ADDRESS_:35729/livereload.js"></script>' +
@@ -50,6 +52,10 @@ var getIpAddress = function() {
   }
   return lookupIpAddress;
 };
+
+var proxy = httpProxy.createProxyServer({});
+
+
 
 gulp.task('command', function() {
   nodemon({
