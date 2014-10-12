@@ -85,18 +85,29 @@ app.get('/master-command', function(req, res) {
 });
 
 var proxy = httpProxy.createProxyServer({});
+proxy.on('proxyRes', function(proxyRes, req, res) {});
+proxy.on('error', function(proxyRes, req, res) {
+
+  res.writeHead(200, {
+    'Content-Type': 'text/plain'
+  });
+  res.write('Error : ' + proxyRes.message);
+  res.end();
+});
+
 var server = require('http').createServer(function(req, res) {
   // You can define here your custom logic to handle the request
   // and then proxy the request.
+
   proxy.web(req, res, {
-    target: 'http://www.google.com'
+    target: 'http://127.0.0.1:8000/'
   });
 });
 server.listen(5050);
 
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", ipAddress + ":*");
+  res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Headers", "X-Requested-With");
   res.header("Access-Control-Allow-Headers", "Content-Type");

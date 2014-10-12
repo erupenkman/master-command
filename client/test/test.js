@@ -1,5 +1,6 @@
 var expect = chai.expect;
 var assert = sinon.assert;
+var NAVIGATE_COOKIE_NAME = 'masterNavigateUrl';
 describe("master", function() {
   var sandbox = null;
   beforeEach(function() {
@@ -11,13 +12,14 @@ describe("master", function() {
       console.log('on', arguments);
     });
     $.removeCookie('masterClientId')
+    $.removeCookie(NAVIGATE_COOKIE_NAME)
   });
   afterEach(function() {
     sandbox.restore();
   });
   describe('recordChange', function() {
     it('should emit a correct keypress event', function() {
-      sandbox.stub(masterCommand, 'getXpath', function() {
+      sandbox.stub(helpers, 'getXpath', function() {
         return 'testXPath';
       })
       var fakeInput = $('<input/>');
@@ -34,9 +36,40 @@ describe("master", function() {
 
     });
   });
+  describe('recordNavigate', function() {
+    it('should emit a correct navigate event', function() {
+      masterCommand.recordNavigate({
+        url: 'http://test.com'
+      });
+      assert.calledWithMatch(masterCommand.socket.emit, function(arg1) {
+        return arg1 === 'event';
+      }, function(arg2) {
+        return arg2.type === 'navigate' && arg2.url === 'http://test.com';
+      });
+    });
+    it('should not emit navigate if reflecting a command', function() {
+      sandbox.stub(jQuery, "cookie", function(arg1, arg2) {
+        if (arg1 == NAVIGATE_COOKIE_NAME) {
+          return 'http://test.com';
+        }
+      });
+      masterCommand.recordNavigate({
+        url: 'http://test.com'
+      });
+      assert.calledWithMatch(jQuery.cookie, function(arg1) {
+        return arg1 === NAVIGATE_COOKIE_NAME;
+      }, function(arg2) {
+        return arg2 === '';
+      });
+      assert.neverCalledWithMatch(masterCommand.socket.emit,
+        function(arg1) {
+          return arg1 === 'event';
+        });
+    });
+  });
   describe('recordScroll', function() {
     it('should emit a correct scroll event', function() {
-      sandbox.stub(masterCommand, 'getXpath', function() {
+      sandbox.stub(helpers, 'getXpath', function() {
         return 'window';
       })
       masterCommand.recordScroll({
@@ -50,9 +83,26 @@ describe("master", function() {
 
     });
   });
+  describe('recordHoverStart', function() {
+    it('should emit a correct hoverStart event', function() {
+      sandbox.stub(helpers, 'getXpath', function() {
+        return 'testXPath';
+      });
+
+      var fakeDiv = $('<div>');
+      masterCommand.recordHoverStart({
+        target: fakeDiv
+      });
+      assert.calledWithMatch(masterCommand.socket.emit, function(arg1) {
+        return arg1 === 'event';
+      }, function(arg2) {
+        return arg2.xPath === 'testXPath' && arg2.type === 'hoverStart';
+      });
+    });
+  });
   describe('recordClick', function() {
     it('should emit a correct click event', function() {
-      sandbox.stub(masterCommand, 'getXpath', function() {
+      sandbox.stub(helpers, 'getXpath', function() {
         return 'testXPath';
       })
       masterCommand.recordClick({});
@@ -74,7 +124,7 @@ describe("master", function() {
           return null;
         }
       });
-      var id = masterCommand.createOrGetCookie();
+      var id = helpers.createOrGetCookie();
       expect(jQuery.cookie.calledWith('masterClientId')).to.equal(true);
       expect(id).to.exist;
     });
@@ -117,23 +167,34 @@ describe("master", function() {
   });
   describe('masterScroll', function() {
     it("should call fakeScroll", function() {
-      sandbox.stub(masterCommand, 'fakeScroll');
+      sandbox.stub(helpers, 'fakeScroll');
       var thedocument = masterCommand.masterScroll({
         xPath: 'document',
         scrollTop: 7
       });
-      assert.calledWith(masterCommand.fakeScroll, document, 7);
+      assert.calledWith(helpers.fakeScroll, document, 7);
     });
   });
-  describe('getXpath', function() {
+  describe('masterNavigte', function() {
+    it("should set cookie then reload", function() {
+      sandbox.stub(helpers, 'fakeNavigate');
+      sandbox.stub(jQuery, 'cookie');
+      masterCommand.masterNavigate({
+        url: 'test.com'
+      });
+      assert.calledWith(jQuery.cookie, NAVIGATE_COOKIE_NAME, 'test.com');
+      assert.calledWith(helpers.fakeNavigate, 'test.com');
+    });
+  });
+  describe('getXpath ', function() {
     it("should handle document", function() {
-      var xPath = masterCommand.getXpath(document);
+      var xPath = helpers.getXpath(document);
       expect(xPath).to.equal('document');
     });
   });
-  describe('getElement', function() {
+  describe('getElement ', function() {
     it("should handle document", function() {
-      var thedocument = masterCommand.getElement('document');
+      var thedocument = helpers.getElement('document');
       expect(thedocument).to.equal(document);
     });
   });

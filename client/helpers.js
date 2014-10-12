@@ -1,9 +1,9 @@
-var masterCommand = masterCommand || {};
+var helpers = helpers || {};
 (function() {
-  masterCommand.fakeScroll = function(node, scrollTop) {
+  helpers.fakeScroll = function(node, scrollTop) {
     $(node).scrollTop(scrollTop);
   };
-  masterCommand.fakeKeyPress = function(node, updatedContents) {
+  helpers.fakeKeyPress = function(node, updatedContents) {
     //todo: use a real plugin here
     $(node).val(updatedContents);
     $(node).trigger({
@@ -11,8 +11,17 @@ var masterCommand = masterCommand || {};
       which: null
     });
   };
+  // navigate to url, created to encapsulate window.location.href
+  helpers.fakeNavigate = function(url) {
+    // if (window.location === url) {
+    //   location.reload(true);
+    // } else {
+    //   window.location = url;
+    // }
+    console.log('reload');
+  };
   //from underscore.js, todo: add throttling (and don't forget calls of different type);
-  masterCommand.debounce = function(func, wait) {
+  helpers.debounce = function(func, wait) {
     var timeout;
     return function() {
       var context = this,
@@ -25,7 +34,7 @@ var masterCommand = masterCommand || {};
     };
   }
   //thanks http://stackoverflow.com/questions/1421584/how-can-i-simulate-a-click-to-an-anchor-tag
-  masterCommand.fakeClick = function(event, anchorObj) {
+  helpers.fakeClick = function(event, anchorObj) {
     if (anchorObj.click) {
       anchorObj.click()
     } else if (document.createEvent) {
@@ -41,7 +50,7 @@ var masterCommand = masterCommand || {};
       }
     }
   };
-  masterCommand.getXpath = function(elm) {
+  helpers.getXpath = function(elm) {
     if (elm === document) {
       return 'document';
     }
@@ -71,7 +80,7 @@ var masterCommand = masterCommand || {};
     return segs.length ? '/' + segs.join('/') : null;
   };
 
-  masterCommand.getElement = function(path) {
+  helpers.getElement = function(path) {
     if (path === 'document') {
       return document;
     }
@@ -80,7 +89,7 @@ var masterCommand = masterCommand || {};
     return result.singleNodeValue;
   }
 
-  masterCommand.createOrGetCookie = function() {
+  helpers.createOrGetCookie = function() {
     var fromCookie = $.cookie('masterClientId');
     if (fromCookie) {
       return fromCookie;

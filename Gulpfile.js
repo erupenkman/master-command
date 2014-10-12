@@ -61,7 +61,7 @@ gulp.task('command', function() {
   nodemon({
     script: 'server.js',
     ext: 'js',
-    ignore: ['test/**/*', 'master.js'],
+    ignore: ['test/**/*', 'client/**/*'],
     nodeArgs: ['--debug']
   })
     .on('restart', function() {

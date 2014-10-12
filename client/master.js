@@ -4,7 +4,12 @@ console.debug = console.debug || function() {};
 (function() {
   var clickedByMaster = null; //prevent infinite loop
   masterCommand.socket = null;
-  var deviceId = masterCommand.createOrGetCookie();
+  var deviceId = helpers.createOrGetCookie();
+
+
+  function newHash() {
+    return Math.floor(Math.random() * 100000);
+  }
 
   function sayHello() {
     masterCommand.socket.emit('hello', {
@@ -41,25 +46,32 @@ console.debug = console.debug || function() {};
           hash: unCompletedMoves[i].hash
         });
         var move = unCompletedMoves[i];
-        if (move.type === 'click') {
-          masterCommand.masterClick(move.xPath);
-        } else if (move.type === 'keyPress') {
-          masterCommand.masterKeyPress(move);
-        } else if (move.type === 'scroll') {
-          masterCommand.masterScroll(move);
+
+        switch (move.type) {
+          case 'click':
+            masterCommand.masterClick(move.xPath);
+            break;
+          case 'keyPress':
+            masterCommand.masterKeyPress(move);
+            break;
+          case 'scroll':
+            masterCommand.masterScroll(move);
+            break;
+          case 'navigate':
+            masterCommand.masterNavigate(move);
+            break;
         }
       }
-
     }
   }
   masterCommand.masterClick = function(xPath) {
-    var clickedNode = masterCommand.getElement(xPath);
+    var clickedNode = helpers.getElement(xPath);
     clickedByMaster = clickedNode;
     if (!clickedNode) {
       console.error('cannot replay click of: ', xPath);
       return;
     }
-    masterCommand.fakeClick(null, clickedNode);
+    helpers.fakeClick(null, clickedNode);
   };
 
   masterCommand.masterKeyPress = function(move) {
@@ -67,14 +79,14 @@ console.debug = console.debug || function() {};
       console.error('cannot replay keyPress of: ', move.xPath);
       return
     }
-    var clickedNode = masterCommand.getElement(move.xPath);
+    var clickedNode = helpers.getElement(move.xPath);
     clickedByMaster = clickedNode;
     if (!clickedNode) {
       console.error('cannot replay click of: ', move.xPath);
       return;
     }
     console.debug('replay keypress: ', move);
-    masterCommand.fakeKeyPress(clickedNode, move.newContent);
+    helpers.fakeKeyPress(clickedNode, move.newContent);
   };
 
   masterCommand.masterScroll = function(move) {
@@ -82,52 +94,82 @@ console.debug = console.debug || function() {};
       console.error('cannot replay keyPress of: ', move.xPath);
       return;
     }
-    var scrolledNode = masterCommand.getElement(move.xPath);
+    var scrolledNode = helpers.getElement(move.xPath);
     clickedByMaster = scrolledNode;
     if (!scrolledNode) {
       console.error('cannot replay scroll of: ', move.xPath);
       return;
     }
     console.debug('replay scroll: ', move);
-    masterCommand.fakeScroll(scrolledNode, move.scrollTop);
+    helpers.fakeScroll(scrolledNode, move.scrollTop);
+  };
+  masterCommand.masterNavigate = function(move) {
+    $.cookie('masterNavigateUrl', move.url);
+    helpers.fakeNavigate(move.url);
+  };
+  masterCommand.recordNavigate = function(args) {
+    //if is not joining an existing sesion
+    //and it hasn't just been reloaded by master
+    var masterNavigateCookie = $.cookie('masterNavigateUrl');
+    if (masterNavigateCookie === args.url) {
+      //then reload was triggered by mastercommand
+      $.cookie('masterNavigateUrl', '');
+
+      return;
+    }
+    masterCommand.socket.emit('event', {
+      type: 'navigate',
+      deviceId: deviceId,
+      hash: newHash(),
+      url: args.url
+    });
   };
 
   masterCommand.recordChange = function(e) {
     var newContent = $(e.target).val();
-    var xPath = masterCommand.getXpath(e.target);
+    var xPath = helpers.getXpath(e.target);
     masterCommand.socket.emit('event', {
       type: 'keyPress',
       xPath: xPath,
       deviceId: deviceId,
-      hash: Math.floor(Math.random() * 100000),
+      hash: newHash(),
       newContent: newContent
     });
   };
+  masterCommand.recordHoverStart = function(e) {
+    var xPath = helpers.getXpath(e.target);
+    masterCommand.socket.emit('event', {
+      type: 'hoverStart',
+      xPath: xPath,
+      deviceId: deviceId,
+      hash: newHash()
+    });
+  };
   masterCommand.recordClick = function(e) {
-    var xPath = masterCommand.getXpath(e.target);
+    var xPath = helpers.getXpath(e.target);
     masterCommand.socket.emit('event', {
       type: 'click',
       xPath: xPath,
       deviceId: deviceId,
-      hash: Math.floor(Math.random() * 100000)
+      hash: newHash()
     });
   };
   masterCommand.recordScroll = function(e) {
-    var xPath = masterCommand.getXpath(e.target);
+    var xPath = helpers.getXpath(e.target);
     var scrollTop = $(e.target).scrollTop();
     console.log(scrollTop);
     masterCommand.socket.emit('event', {
       type: 'scroll',
       xPath: xPath,
       deviceId: deviceId,
-      hash: Math.floor(Math.random() * 100000),
+      hash: newHash(),
       scrollTop: scrollTop
     });
   };
   masterCommand.stop = function() {
     masterCommand.socket.emit('stop');
   };
-  masterCommand.debouncedRecordScroll = masterCommand.debounce(masterCommand.recordScroll, 100);
+  masterCommand.debouncedRecordScroll = helpers.debounce(masterCommand.recordScroll, 100);
 
   masterCommand.init = function(ipAddress) {
     if (!ipAddress) {
@@ -186,6 +228,15 @@ console.debug = console.debug || function() {};
       e.preventDefault();
       return false;
     });
+
+    console.log('ttt');
+    $('*').on('mouseover', function(e) {
+      // console.log('hover on');
+    });
+    $('*').on('mouseout', function(e) {
+      // console.log('hover off');
+    });
+
     $('*').on('scroll', function(e) {
       if (this !== e.target) {
         return;
@@ -215,5 +266,15 @@ console.debug = console.debug || function() {};
       }
       masterCommand.recordClick(e);
     });
+    $(window).on('beforeunload', function() {
+      masterCommand.socket.close();
+    });
   };
 })();
+
+
+$(function() {
+  masterCommand.recordNavigate({
+    url: window.location.href
+  });
+});

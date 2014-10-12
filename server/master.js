@@ -28,7 +28,9 @@ exports.getIpAddress = function() {
 var allDevices = [];
 var moves = [];
 var stopped = false;
-
+exports.getLastMoveHash = function() {
+  return (moves[moves.length - 1] || {}).hash || '';
+};
 exports.isStopped = function() {
   return stopped;
 }
@@ -67,16 +69,31 @@ exports.matchDevice = function(id, socket) {
 exports.getDevice = function(index) {
   return allDevices[index];
 }
+exports.onUpdate = function(newMove) {
 
-exports.onUpdate = function(lastMove) {
-  var masterDevice = exports.matchDevice(lastMove.deviceId);
+  var masterDevice = exports.matchDevice(newMove.deviceId);
   if (!masterDevice) {
     console.error('device not found');
     return;
   }
-  masterDevice.lastMoveHash = lastMove.hash;
+  //we don't want new devices to trigger navigate.
+  // only allow updates when device is completely up to date (one driver at a time!)
+  if (masterDevice.lastMoveHash !== exports.getLastMoveHash()) {
+    return;
+  }
 
-  moves.push(lastMove);
+  if (newMove.type === 'navigate') {
+    //clear history to stop it from getting too out of hand!
+    console.log('navigated to: ', newMove.url);
+    moves = [];
+    _.forEach(allDevices, function(device) {
+      device.lastMoveHash = '';
+    });
+  }
+
+  masterDevice.lastMoveHash = newMove.hash;
+
+  moves.push(newMove);
   for (var i = 0; i < allDevices.length; i++) {
     var device = allDevices[i];
     device.socket.emit('update', {
