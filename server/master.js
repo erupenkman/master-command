@@ -69,6 +69,16 @@ exports.matchDevice = function(id, socket) {
 exports.getDevice = function(index) {
   return allDevices[index];
 }
+exports.broadcastMoves = function() {
+
+  for (var i = 0; i < allDevices.length; i++) {
+    var device = allDevices[i];
+    device.socket.emit('update', {
+      moves: moves,
+      lastMoveHash: device.lastMoveHash
+    });
+  }
+}
 exports.onUpdate = function(newMove) {
 
   var masterDevice = exports.matchDevice(newMove.deviceId);
@@ -94,23 +104,14 @@ exports.onUpdate = function(newMove) {
   masterDevice.lastMoveHash = newMove.hash;
 
   moves.push(newMove);
-  for (var i = 0; i < allDevices.length; i++) {
-    var device = allDevices[i];
-    device.socket.emit('update', {
-      moves: moves,
-      lastMoveHash: device.lastMoveHash
-    });
-  }
+  exports.broadcastMoves();
 }
 
-exports.reset = function(url) {
+
+exports.reset = function(newMove) {
   stopped = false;
-  _.forEach(allDevices, function(device) {
-    console.log('reset device: ', device.id);
-    device.socket.emit('reset', {
-      url: url
-    });
-  });
+  moves.push(newMove);
+  exports.broadcastMoves();
   allDevices = [];
   moves = [];
 };

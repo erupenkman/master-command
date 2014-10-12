@@ -19,43 +19,38 @@ console.debug = console.debug || function() {};
   masterCommand.reset = function() {
     var path = window.location.href;
     masterCommand.socket.emit('reset', {
+      type: 'reset',
+      deviceId: deviceId,
+      hash: newHash(),
       url: path
     });
   }
-  masterCommand.handleMove = function(data) {
+  masterCommand.handleMoves = function(data) {
     if (data.moves === undefined || data.moves.length === undefined) {
       console.error('no moves recieved');
       return;
     }
-    var unCompletedMoves = []; //
-    if (!data.lastMoveHash) {
-      unCompletedMoves = data.moves;
-    } else {
-      for (var i = 0; i < data.moves.length; i++) {
-        var move = data.moves[i];
-        if (move.hash === data.lastMoveHash) {
-          unCompletedMoves = data.moves.slice(i + 1);
-        }
-      }
-    }
+    var unCompletedMoves = helpers.getUncompletedMoves(data);
     if (unCompletedMoves.length > 0) {
       //tell command about the move
       for (var i = 0; i < unCompletedMoves.length; i++) {
-        masterCommand.socket.emit('playMove', {
-          deviceId: deviceId,
-          hash: unCompletedMoves[i].hash
-        });
-        var move = unCompletedMoves[i];
 
+        var move = unCompletedMoves[i];
+        helpers.setCurrentPlayingMove(move);
         switch (move.type) {
           case 'click':
-            masterCommand.masterClick(move.xPath);
+            masterCommand.masterClick(move.xPath, function() {
+              helpers.setCurrentPlayingMove(null);
+              masterCommand.emitPlayMove(move);
+            });
             break;
           case 'keyPress':
             masterCommand.masterKeyPress(move);
+            masterCommand.emitPlayMove(move);
             break;
           case 'scroll':
             masterCommand.masterScroll(move);
+            masterCommand.emitPlayMove(move);
             break;
           case 'navigate':
             masterCommand.masterNavigate(move);
@@ -64,9 +59,29 @@ console.debug = console.debug || function() {};
       }
     }
   }
-  masterCommand.masterClick = function(xPath) {
+  masterCommand.emitPlayMove = function(move) {
+    masterCommand.socket.emit('playMove', {
+      deviceId: deviceId,
+      hash: move.hash
+    });
+  };
+  masterCommand.handleCurrentPlayingMove = function() {
+    currentMove = helpers.getCurrentPlayingMove();
+    if (currentMove == null) {
+      masterCommand.recordNavigate({
+        url: window.location.href
+      });
+    } else {
+      masterCommand.emitPlayMove(currentMove);
+      helpers.setCurrentPlayingMove(null);
+    }
+  };
+  masterCommand.masterClick = function(xPath, onClickFinished) {
     var clickedNode = helpers.getElement(xPath);
     clickedByMaster = clickedNode;
+    $(clickedNode).one('click', function() {
+      setTimeout(onClickFinished, 100);
+    });
     if (!clickedNode) {
       console.error('cannot replay click of: ', xPath);
       return;
@@ -104,19 +119,12 @@ console.debug = console.debug || function() {};
     helpers.fakeScroll(scrolledNode, move.scrollTop);
   };
   masterCommand.masterNavigate = function(move) {
-    $.cookie('masterNavigateUrl', move.url);
     helpers.fakeNavigate(move.url);
   };
   masterCommand.recordNavigate = function(args) {
     //if is not joining an existing sesion
     //and it hasn't just been reloaded by master
-    var masterNavigateCookie = $.cookie('masterNavigateUrl');
-    if (masterNavigateCookie === args.url) {
-      //then reload was triggered by mastercommand
-      $.cookie('masterNavigateUrl', '');
 
-      return;
-    }
     masterCommand.socket.emit('event', {
       type: 'navigate',
       deviceId: deviceId,
@@ -177,6 +185,7 @@ console.debug = console.debug || function() {};
       return;
     }
     masterCommand.socket = masterCommand.io(ipAddress);
+    masterCommand.handleCurrentPlayingMove();
     masterCommand.socket.on('hello', function(data) {
       if (data.stopped) {
         $('.master-bar').addClass('stopped');
@@ -185,15 +194,7 @@ console.debug = console.debug || function() {};
     });
     masterCommand.socket.on('update', function(data) {
       console.debug('update', data);
-      masterCommand.handleMove(data);
-    });
-    masterCommand.socket.on('reset', function(data) {
-      console.debug('reset to:', data.url);
-      if (window.location.href === data.url) {
-        window.location.reload();
-      } else {
-        window.location.href = data.url;
-      }
+      masterCommand.handleMoves(data);
     });
     masterCommand.socket.on('stop', function() {
       $('.master-bar').addClass('stopped');
@@ -271,10 +272,3 @@ console.debug = console.debug || function() {};
     });
   };
 })();
-
-
-$(function() {
-  masterCommand.recordNavigate({
-    url: window.location.href
-  });
-});

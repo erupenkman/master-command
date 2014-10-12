@@ -13,12 +13,26 @@ var helpers = helpers || {};
   };
   // navigate to url, created to encapsulate window.location.href
   helpers.fakeNavigate = function(url) {
-    // if (window.location === url) {
-    //   location.reload(true);
-    // } else {
-    //   window.location = url;
-    // }
+    if (window.location === url) {
+      location.reload(true);
+    } else {
+      window.location = url;
+    }
     console.log('reload');
+  };
+  helpers.getUncompletedMoves = function(data) {
+    var unCompletedMoves = [];
+    if (!data.lastMoveHash) {
+      unCompletedMoves = data.moves;
+    } else {
+      for (var i = 0; i < data.moves.length; i++) {
+        var move = data.moves[i];
+        if (move.hash === data.lastMoveHash) {
+          unCompletedMoves = data.moves.slice(i + 1);
+        }
+      }
+    }
+    return unCompletedMoves;
   };
   //from underscore.js, todo: add throttling (and don't forget calls of different type);
   helpers.debounce = function(func, wait) {
@@ -88,7 +102,13 @@ var helpers = helpers || {};
     var result = evaluator.evaluate(path, document.documentElement, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     return result.singleNodeValue;
   }
-
+  helpers.setCurrentPlayingMove = function(move) {
+    $.cookie('currentPlayingMove', JSON.stringify(move));
+  };
+  helpers.getCurrentPlayingMove = function() {
+    var val = $.cookie('currentPlayingMove');
+    return val ? JSON.parse(val) : null;
+  };
   helpers.createOrGetCookie = function() {
     var fromCookie = $.cookie('masterClientId');
     if (fromCookie) {

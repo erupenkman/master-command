@@ -1,6 +1,12 @@
 var expect = chai.expect;
 var assert = sinon.assert;
 var NAVIGATE_COOKIE_NAME = 'masterNavigateUrl';
+var CLICK_MOVE = {
+  type: 'click',
+  hash: 'h1',
+  xPath: '1'
+};
+Object.freeze(CLICK_MOVE);
 describe("master", function() {
   var sandbox = null;
   beforeEach(function() {
@@ -46,25 +52,6 @@ describe("master", function() {
       }, function(arg2) {
         return arg2.type === 'navigate' && arg2.url === 'http://test.com';
       });
-    });
-    it('should not emit navigate if reflecting a command', function() {
-      sandbox.stub(jQuery, "cookie", function(arg1, arg2) {
-        if (arg1 == NAVIGATE_COOKIE_NAME) {
-          return 'http://test.com';
-        }
-      });
-      masterCommand.recordNavigate({
-        url: 'http://test.com'
-      });
-      assert.calledWithMatch(jQuery.cookie, function(arg1) {
-        return arg1 === NAVIGATE_COOKIE_NAME;
-      }, function(arg2) {
-        return arg2 === '';
-      });
-      assert.neverCalledWithMatch(masterCommand.socket.emit,
-        function(arg1) {
-          return arg1 === 'event';
-        });
     });
   });
   describe('recordScroll', function() {
@@ -129,21 +116,31 @@ describe("master", function() {
       expect(id).to.exist;
     });
   });
-  describe('handleMove', function() {
-
-    it("should repeat the correct move", function() {
-      sandbox.stub(masterCommand, 'masterClick');
-      masterCommand.handleMove({
-        lastMoveHash: 'h2',
-        moves: [{
-          type: 'click',
-          hash: 'h1',
-          xPath: '1'
-        }, {
+  describe('getUncompletedMoves', function() {
+    it('should get the last move', function() {
+      var uncompleted = helpers.getUncompletedMoves({
+        moves: [CLICK_MOVE, {
           type: 'click',
           hash: 'h2',
           xPath: '2'
         }, {
+          type: 'click',
+          hash: 'h3',
+          xPath: '3'
+        }],
+        lastMoveHash: 'h2'
+      });
+      expect(uncompleted.length).to.equal(1);
+      expect(uncompleted[0].hash).to.equal('h3');
+    })
+  });
+  describe('handleMoves', function() {
+
+    it("should repeat the correct move", function() {
+      sandbox.stub(masterCommand, 'masterClick');
+      masterCommand.handleMoves({
+        lastMoveHash: '',
+        moves: [{
           type: 'click',
           hash: 'h3',
           xPath: '3'
@@ -154,15 +151,75 @@ describe("master", function() {
     });
     it("should do nothing when 0 moves", function() {
       sandbox.stub(masterCommand, 'masterClick');
-      masterCommand.handleMove({
+      masterCommand.handleMoves({
         moves: []
       });
       expect(masterCommand.masterClick.called).to.equal(false);
     });
+    it("should notify the server when move is complete", function() {
+      sandbox.stub(masterCommand, 'masterClick', function(move, callback) {
+        callback();
+      });
+      masterCommand.handleMoves({
+        lastMoveHash: '',
+        moves: [CLICK_MOVE]
+      });
+      assert.calledWithMatch(masterCommand.socket.emit, function(arg1) {
+        return arg1 === 'playMove';
+      }, function(arg2) {
+        return arg2.hash === 'h1';
+      });
+    });
+    it("should not notify the server when move fails", function() {
+      sandbox.stub(masterCommand, 'masterClick');
+      try {
+        masterCommand.handleMoves({
+          lastMoveHash: '',
+          moves: [CLICK_MOVE]
+        });
+      } catch (e) {}
+      assert.neverCalledWithMatch(masterCommand.socket.emit, function(arg1) {
+        return arg1 === 'playMove';
+      }, function(arg2) {
+        return arg2.hash === 'h1';
+      });
+    });
+    it("should save the move it's playing into a cookie", function() {
+      var currentPlayingMove;
+      sandbox.stub(masterCommand, 'masterClick', function(move) {
+        currentPlayingMove = helpers.getCurrentPlayingMove();
+      });
+      masterCommand.handleMoves({
+        lastMoveHash: '',
+        moves: [CLICK_MOVE]
+      });
+      expect(currentPlayingMove.hash).to.equal('h1');
+    });
+    it("should pass a callback to clear the currentPlayingMove cookie", function() {
+      sandbox.stub(masterCommand, 'masterClick', function(move, callback) {
+        callback();
+      });
+      masterCommand.handleMoves({
+        lastMoveHash: '',
+        moves: [CLICK_MOVE]
+      });
+      var currentPlayingMove = helpers.getCurrentPlayingMove();
+      expect(currentPlayingMove).to.equal(null);
+    });
 
     it("should handle shitty data", function() {
-      masterCommand.handleMove('yer mum');
+      // masterCommand.handleMoves('yer mum');
       //that was the test
+    });
+  });
+  describe('handleCurrentPlayingMove', function() {
+    it("should record navigate if move is null", function() {
+      sandbox.stub(masterCommand, 'recordNavigate');
+      sandbox.stub(helpers, 'getCurrentPlayingMove', function() {
+        return null;
+      });
+      masterCommand.handleCurrentPlayingMove();
+      assert.called(masterCommand.recordNavigate);
     });
   });
   describe('masterScroll', function() {
@@ -176,13 +233,11 @@ describe("master", function() {
     });
   });
   describe('masterNavigte', function() {
-    it("should set cookie then reload", function() {
+    it("should  reload", function() {
       sandbox.stub(helpers, 'fakeNavigate');
-      sandbox.stub(jQuery, 'cookie');
       masterCommand.masterNavigate({
         url: 'test.com'
       });
-      assert.calledWith(jQuery.cookie, NAVIGATE_COOKIE_NAME, 'test.com');
       assert.calledWith(helpers.fakeNavigate, 'test.com');
     });
   });
