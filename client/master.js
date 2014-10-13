@@ -40,7 +40,6 @@ console.debug = console.debug || function() {};
         switch (move.type) {
           case 'click':
             masterCommand.masterClick(move.xPath, function() {
-              helpers.setCurrentPlayingMove(null);
               masterCommand.emitPlayMove(move);
             });
             break;
@@ -55,14 +54,19 @@ console.debug = console.debug || function() {};
           case 'navigate':
             masterCommand.masterNavigate(move);
             break;
+          case 'reset':
+            masterCommand.masterNavigate(move);
+            break;
         }
       }
     }
   }
   masterCommand.emitPlayMove = function(move) {
+    helpers.setCurrentPlayingMove(null);
     masterCommand.socket.emit('playMove', {
       deviceId: deviceId,
-      hash: move.hash
+      hash: move.hash,
+      type: move.type
     });
   };
   masterCommand.handleCurrentPlayingMove = function() {
@@ -73,7 +77,6 @@ console.debug = console.debug || function() {};
       });
     } else {
       masterCommand.emitPlayMove(currentMove);
-      helpers.setCurrentPlayingMove(null);
     }
   };
   masterCommand.masterClick = function(xPath, onClickFinished) {

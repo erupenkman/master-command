@@ -21,7 +21,7 @@ var helpers = helpers || {};
     console.log('reload');
   };
   helpers.getUncompletedMoves = function(data) {
-    var unCompletedMoves = [];
+    var unCompletedMoves = data.moves;
     if (!data.lastMoveHash) {
       unCompletedMoves = data.moves;
     } else {

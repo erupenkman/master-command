@@ -133,6 +133,24 @@ describe("master", function() {
       expect(uncompleted.length).to.equal(1);
       expect(uncompleted[0].hash).to.equal('h3');
     })
+    it('should get all moves', function() {
+      var uncompleted = helpers.getUncompletedMoves({
+        moves: [
+          CLICK_MOVE, {
+            type: 'click',
+            hash: 'h2',
+            xPath: '2'
+          }, {
+            type: 'click',
+            hash: 'h3',
+            xPath: '3'
+          }
+        ],
+        lastMoveHash: 'h0'
+      });
+      expect(uncompleted.length).to.equal(3);
+      expect(uncompleted[2].hash).to.equal('h3');
+    })
   });
   describe('handleMoves', function() {
 

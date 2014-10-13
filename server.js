@@ -42,18 +42,21 @@ io.on('connection', function(socket) {
     master.onUpdate(data);
   });
   socket.on('playMove', function(data) {
-    console.log('move repeated: ', data.deviceId, data.hash);
+    console.log('move repeated: ', data.deviceId, data.hash, data.type);
     if (master.isStopped()) {
       return;
     }
-    var device = master.matchDevice(data.deviceId);
-    device.lastMoveHash = data.hash;
+    var device = master.matchDevice(data.deviceId, socket);
+    if (device) {
+      device.lastMoveHash = data.hash;
+    }
   });
   socket.on('reset', function(data) {
     if (!data) {
       data = {};
     }
-    master.reset(data.url);
+    console.log('reset');
+    master.reset(data);
   });
   socket.on('stop', function(data) {
     console.log('stop');
@@ -63,7 +66,7 @@ io.on('connection', function(socket) {
     if (!data) {
       data = {};
     }
-    master.reset(data.url);
+    master.reset(data);
   });
 });
 

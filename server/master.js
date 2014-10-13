@@ -88,13 +88,12 @@ exports.onUpdate = function(newMove) {
   }
   //we don't want new devices to trigger navigate.
   // only allow updates when device is completely up to date (one driver at a time!)
-  if (masterDevice.lastMoveHash !== exports.getLastMoveHash()) {
+  if (!!exports.getLastMoveHash() && masterDevice.lastMoveHash !== exports.getLastMoveHash()) {
     return;
   }
 
   if (newMove.type === 'navigate') {
     //clear history to stop it from getting too out of hand!
-    console.log('navigated to: ', newMove.url);
     moves = [];
     _.forEach(allDevices, function(device) {
       device.lastMoveHash = '';
