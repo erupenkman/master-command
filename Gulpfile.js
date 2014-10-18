@@ -1,72 +1,23 @@
 var gulp = require('gulp'),
   nodemon = require('gulp-nodemon'),
-  connect = require('gulp-connect'),
-  inject = require('connect-injector'),
-  url = require('url'),
-  httpProxy = require('http-proxy');
-
-var injectMaster =
-  '<script src="http://_IP_ADDRESS_:35729/livereload.js"></script>' +
-  '<script src="http://_IP_ADDRESS_:8001/jquery"></script>' +
-  '<script src="http://_IP_ADDRESS_:8001/jquery.cookie"></script>' +
-  '<script src="http://_IP_ADDRESS_:8001/socket.js-client"></script>' +
-
-  '<script src="http://_IP_ADDRESS_:8001/helpers"></script>' +
-  '<script src="http://_IP_ADDRESS_:8001/master-command"></script>' +
-  '<style>' +
-  '   .master-bar {' +
-  '     font-size: 12px;' +
-  '     position: fixed;' +
-  '     bottom: 0;' +
-  '     left: 0;' +
-  '     background: white;' +
-  '   }' +
-  '   .master-bar.stopped {' +
-  '     background: #FCC;' +
-  '   }' +
-  '</style>' +
-  '<div class="master-bar"> Reflector ' +
-  '   <a href="javascript:;"id="mc-reset">Reset</a>' +
-  '   <a href="javascript:;" id="mc-stop">Stop</a>' +
-  '   <a href="javascript:;" id="mc-start">Start</a>' +
-  '</div>' +
-  '<script>' +
-  '   masterCommand.init(\'http://_IP_ADDRESS_:8001\');' +
-  '</script>'
-var getIpAddress = function() {
-  //thanks dude http://jbavari.github.io/blog/2013/12/04/automating-local-ip-lookup-with-grunt-and-node/
-  var os = require('os');
-  var ifaces = os.networkInterfaces();
-  var lookupIpAddress = 'localhost';
-  for (var dev in ifaces) {
-    if (dev != "en1" && dev != "en0") {
-      continue;
-    }
-    for (var i in ifaces[dev]) {
-      var details = ifaces[dev][i];
-      if (details.family == 'IPv4') {
-        lookupIpAddress = details.address;
-        break;
-      }
-    }
-  }
-  return lookupIpAddress;
-};
-
-var proxy = httpProxy.createProxyServer({});
-
-
+  connect = require('gulp-connect');
 
 gulp.task('command', function() {
   nodemon({
     script: 'server.js',
     ext: 'js',
     ignore: ['test/**/*', 'client/**/*'],
-    nodeArgs: ['--debug']
-  })
-    .on('restart', function() {
+    nodeArgs: ['--debug=5858']
+  });
+});
 
-    })
+gulp.task('proxy', function() {
+  nodemon({
+    script: 'server/proxy.js',
+    ext: 'js',
+    ignore: ['test/**/*', 'client/**/*'],
+    nodeArgs: ['--debug=5859']
+  })
 });
 
 gulp.task('reload', function() {
@@ -80,17 +31,7 @@ gulp.task('connect', function() {
   connect.server({
     root: './client',
     livereload: true,
-    port: 8000,
-    middleware: function(connect, opt) {
-      return [inject(function when(req, res) {
-        var contetType = res.getHeader('content-type');
-        var isHtml = contetType && contetType.indexOf('html') !== -1;
-        return isHtml;
-      }, function converter(callback, content, req, res) {
-        var ipAddress = getIpAddress();
-        callback(null, content + injectMaster.replace(/_IP_ADDRESS_/g, ipAddress));
-      })];
-    }
+    port: 8100
   });
 });
 

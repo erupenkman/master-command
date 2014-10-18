@@ -1,0 +1,13 @@
+<a href="http://www.google.com/search">google</a>
+
+<a onclick="window.location.href='http://www.google.com/search'">google2</a>
+
+<a id="google">google3</a>
+
+<script src="../../bower_components/jquery/dist/jquery.js"></script>
+<script>
+  $('#google').on('click', function() {
+    console.log('//a');
+    window.location.href = 'http:'+'//www.google.com';
+  });
+</script>

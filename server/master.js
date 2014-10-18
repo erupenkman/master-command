@@ -1,27 +1,4 @@
-var _ = require('underscore'),
-  os = require('os');
-
-exports.getIpAddress = function() {
-  //thanks dude http://jbavari.github.io/blog/2013/12/04/automating-local-ip-lookup-with-grunt-and-node/
-
-  var ifaces = os.networkInterfaces();
-  var lookupIpAddress = 'localhost';
-  for (var dev in ifaces) {
-    if (dev != "en1" && dev != "en0") {
-      continue;
-    }
-
-    for (var i in ifaces[dev]) {
-      var details = ifaces[dev][i];
-      if (details.family == 'IPv4') {
-        lookupIpAddress = details.address;
-        break;
-      }
-    }
-  }
-  return lookupIpAddress;
-
-}
+var _ = require('underscore');
 
 
 

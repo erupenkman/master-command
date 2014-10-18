@@ -1,10 +1,7 @@
 var express = require('express'),
   http = require('http'),
   app = express(),
-  httpProxy = require('http-proxy'),
   master = require('./server/master.js');
-
-var ipAddress = master.getIpAddress();
 
 var server = app.listen(8001, function() {
   console.log('Listening on port %d', server.address().port);
@@ -86,27 +83,6 @@ app.get('/helpers', function(req, res) {
 app.get('/master-command', function(req, res) {
   res.sendfile(__dirname + '/client/master.js');
 });
-
-var proxy = httpProxy.createProxyServer({});
-proxy.on('proxyRes', function(proxyRes, req, res) {});
-proxy.on('error', function(proxyRes, req, res) {
-
-  res.writeHead(200, {
-    'Content-Type': 'text/plain'
-  });
-  res.write('Error : ' + proxyRes.message);
-  res.end();
-});
-
-var server = require('http').createServer(function(req, res) {
-  // You can define here your custom logic to handle the request
-  // and then proxy the request.
-
-  proxy.web(req, res, {
-    target: 'http://127.0.0.1:8000/'
-  });
-});
-server.listen(5050);
 
 
 app.use(function(req, res, next) {
