@@ -1,12 +1,13 @@
 var httpProxy = require('http-proxy'),
   http = require('http'),
-  os = require('os');
+  connect = require('connect'),
+  os = require('os'),
+  injector = require('connect-injector');
 
 ///
 /// Actually run the main server, intercept requests and inject our feindish mastercommand scripts
 ///
 
-var proxy = httpProxy.createProxyServer({});
 var injectMaster =
   '<script src="http://_IP_ADDRESS_:35729/livereload.js"></script>' +
   '<script src="http://_IP_ADDRESS_:8001/jquery"></script>' +
@@ -55,33 +56,31 @@ getIpAddress = function() {
   }
   return lookupIpAddress;
 
-}
+};
 
+var middleware = injector(function when(req, res) {
+  var contetType = res.getHeader('content-type');
+  var isHtml = contetType && contetType.indexOf('html') !== -1;
+  return isHtml;
+}, function converter(callback, content, req, res) {
+  var ipAddress = getIpAddress();
+  callback(null, content + injectMaster.replace(/_IP_ADDRESS_/g, ipAddress));
+});
+var app = connect();
+app.use(middleware)
+app.use(function(req, res) {
+  // You can define here your custom logic to handle the request
+  // and then proxy the request.
+  proxy.web(req, res, {
+    target: 'http://localhost:8100'
+  });
+});
+var proxy = httpProxy.createProxyServer(middleware);
 proxy.on('proxyReq', function(proxyReq, req, res, options) {
-  proxyReq.setHeader('accept-encoding', '*;q=1,gzip=0');
+  proxyReq.setHeader('accept-encoding', 'identity');
 });
-// force uncompresed
-proxy.on('proxyRes', function(proxyRes, req, res) {
-  var _write = res.write,
-    _writeHead = res.writeHead,
-    isHtml = false;
-  var injectHtml = injectMaster.replace(/_IP_ADDRESS_/g, getIpAddress());
-  res.writeHead = function(code, headers) {
-    isHtml = proxyRes.headers['content-type'] && proxyRes.headers['content-type'].match('text/html');
-    if (isHtml) {
-      length = parseInt(proxyRes.headers['content-length']) + injectHtml.length;
-      res.setHeader('content-length', length);
-    }
-    _writeHead.apply(this, arguments);
-  }
 
-  res.write = function(chunk) {
-    if (isHtml) {
-      chunk = chunk.toString().replace(/(<\/html[^>]*>)/, "$1" + injectHtml);
-    }
-    _write.call(res, chunk);
-  }
-});
+proxy.on('proxyRes', function(proxyRes, req, res) {});
 
 proxy.on('error', function(proxyRes, req, res) {
   res.writeHead(200, {
@@ -91,11 +90,4 @@ proxy.on('error', function(proxyRes, req, res) {
   res.end();
 });
 
-var server = http.createServer(function(req, res) {
-  // You can define here your custom logic to handle the request
-  // and then proxy the request.
-  proxy.web(req, res, {
-    target: 'http://en.wikipedia.org/wiki/Main_Page'
-  });
-});
-server.listen(5050);
+http.createServer(app).listen(5050);
