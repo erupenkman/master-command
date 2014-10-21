@@ -1,5 +1,7 @@
 var helpers = helpers || {};
 (function() {
+  $.cookie.defaults.path = '/';
+
   helpers.fakeScroll = function(node, scrollTop) {
     $(node).scrollTop(scrollTop);
   };

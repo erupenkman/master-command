@@ -83,7 +83,8 @@ console.debug = console.debug || function() {};
     var clickedNode = helpers.getElement(xPath);
     clickedByMaster = clickedNode;
     $(clickedNode).one('click', function() {
-      setTimeout(onClickFinished, 100);
+      //This is liable to break..
+      setTimeout(onClickFinished, 1000);
     });
     if (!clickedNode) {
       console.error('cannot replay click of: ', xPath);
