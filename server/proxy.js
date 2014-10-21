@@ -2,7 +2,8 @@ var httpProxy = require('http-proxy'),
   http = require('http'),
   connect = require('connect'),
   os = require('os'),
-  injector = require('connect-injector');
+  injector = require('connect-injector'),
+  url = require('url');
 
 ///
 /// Actually run the main server, intercept requests and inject our feindish mastercommand scripts
@@ -67,12 +68,17 @@ var middleware = injector(function when(req, res) {
   callback(null, content + injectMaster.replace(/_IP_ADDRESS_/g, ipAddress));
 });
 var app = connect();
-app.use(middleware)
+app.use(middleware);
+var currentTarget = '';
 app.use(function(req, res) {
   // You can define here your custom logic to handle the request
   // and then proxy the request.
+  var parsedUrl = url.parse(req.url, true);
+  if (parsedUrl && parsedUrl.query && typeof parsedUrl.query.masterTargetSite === 'string') {
+    currentTarget = parsedUrl.query.masterTargetSite;
+  }
   proxy.web(req, res, {
-    target: 'http://localhost:8100'
+    target: currentTarget
   });
 });
 var proxy = httpProxy.createProxyServer(middleware);
@@ -80,7 +86,9 @@ proxy.on('proxyReq', function(proxyReq, req, res, options) {
   proxyReq.setHeader('accept-encoding', 'identity');
 });
 
-proxy.on('proxyRes', function(proxyRes, req, res) {});
+proxy.on('proxyRes', function(proxyRes, req, res) {
+
+});
 
 proxy.on('error', function(proxyRes, req, res) {
   res.writeHead(200, {
