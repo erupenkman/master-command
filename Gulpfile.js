@@ -11,14 +11,6 @@ gulp.task('command', function() {
   });
 });
 
-gulp.task('proxy', function() {
-  nodemon({
-    script: 'server/proxy.js',
-    ext: 'js',
-    ignore: ['test/**/*', 'client/**/*'],
-    nodeArgs: ['--debug=5859']
-  })
-});
 
 gulp.task('reload', function() {
 
