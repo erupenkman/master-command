@@ -12,7 +12,7 @@
   },
   "repository": "erupenkman/master-command",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
     "test": "istanbul test _mocha --report html -- test/*.js --reporter spec"
   },
   "dependencies": {

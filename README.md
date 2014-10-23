@@ -42,15 +42,3 @@ include it on your page
 ## License
 
 [MIT License](http://en.wikipedia.org/wiki/MIT_License)
-
-[npm-url]: https://npmjs.org/package/master-command
-[npm-image]: https://badge.fury.io/js/master-command.png
-
-[travis-url]: http://travis-ci.org/erupenkman/master-command
-[travis-image]: https://secure.travis-ci.org/erupenkman/master-command.png?branch=master
-
-[coveralls-url]: https://coveralls.io/r/erupenkman/master-command
-[coveralls-image]: https://coveralls.io/repos/erupenkman/master-command/badge.png
-
-[depstat-url]: https://david-dm.org/erupenkman/master-command
-[depstat-image]: https://david-dm.org/erupenkman/master-command.png
