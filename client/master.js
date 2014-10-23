@@ -1,6 +1,7 @@
 var masterCommand = masterCommand || {};
 masterCommand.io = io;
 console.debug = console.debug || function() {};
+
 (function() {
   var clickedByMaster = null; //prevent infinite loop
   masterCommand.socket = null;

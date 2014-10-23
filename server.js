@@ -3,7 +3,9 @@ var express = require('express'),
   app = express(),
   master = require('./server/master.js');
 
-var server = app.listen(8001, function() {
+
+var envPort = process.env.PORT || 8001;
+var server = app.listen(envPort, function() {
   console.log('Listening on port %d', server.address().port);
 });
 
