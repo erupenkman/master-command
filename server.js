@@ -10,7 +10,9 @@ var server = app.listen(envPort, function() {
 });
 
 
-io = require('socket.io')(server);
+var io = require('socket.io').listen(server, {
+  origins: '*:*'
+});
 
 io.on('connection', function(socket) {
   //if existing servers are open..

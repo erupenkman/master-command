@@ -26,7 +26,7 @@ gulp.task('connect', function() {
     port: 8100
   });
 });
-
+gulp.task('default', ['command']);
 gulp.task('watch', function() {
   gulp.watch(['./client/**/*'], ['reload']);
 });
