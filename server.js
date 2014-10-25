@@ -71,6 +71,10 @@ io.on('connection', function(socket) {
   });
 });
 
+app.options('*', function(req, res) {
+  res.send('');
+});
+
 //todo: break these out
 app.get('/jquery', corsMiddleware(), function(req, res) {
   res.sendfile(__dirname + '/node_modules/jquery/dist/jquery.js');
