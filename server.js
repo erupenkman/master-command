@@ -12,7 +12,8 @@ var server = require('http').createServer(app);
 var io = require('socket.io').listen(server, {
   origins: '*:*'
 });
-
+io.set('transports', ['websocket', 'xhr-polling', 'jsonp-polling', 'htmlfile', 'flashsocket']);
+io.set('origins', '*:*');
 server.listen(envPort, function() {
   console.log('Listening on port %d', server.address().port);
 });
