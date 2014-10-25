@@ -6,9 +6,9 @@ var express = require('express'),
 
 
 var envPort = process.env.PORT || 8001;
-var server = http.createServer(app);
-
-
+var server = app.listen(port, function() {
+  console.log('Listening on port %d', server.address().port);
+});
 
 var io = require('socket.io').listen(server, {
   origins: '*:*'
@@ -70,40 +70,31 @@ io.on('connection', function(socket) {
     master.reset(data);
   });
 });
-
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS");
+  next();
+});
 app.options('*', function(req, res) {
-
   res.send(' ');
 });
 
 //todo: break these out
-app.get('/jquery', corsMiddleware(), function(req, res) {
+app.get('/jquery', function(req, res) {
   res.sendfile(__dirname + '/node_modules/jquery/dist/jquery.js');
 });
-app.get('/jquery.cookie', corsMiddleware(), function(req, res) {
+app.get('/jquery.cookie', function(req, res) {
   res.sendfile(__dirname + '/node_modules/jquery.cookie/jquery.cookie.js');
 });
-app.get('/socket.js-client', corsMiddleware(), function(req, res) {
+app.get('/socket.js-client', function(req, res) {
   res.sendfile(__dirname + '/node_modules/socket.io-client/socket.io.js');
 });
-app.get('/helpers', corsMiddleware(), function(req, res) {
+app.get('/helpers', function(req, res) {
   res.sendfile(__dirname + '/client/helpers.js');
 });
-app.get('/master-command', corsMiddleware(), function(req, res) {
+app.get('/master-command', function(req, res) {
   res.sendfile(__dirname + '/client/master.js');
-});
-
-// app.use(function(req, res, next) {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   res.header("Access-Control-Allow-Headers", "X-Requested-With");
-//   res.header("Access-Control-Allow-Headers", "Content-Type");
-//   res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS");
-//   next();
-// });
-
-//app.configure, app.use etc
-
-server.listen(envPort, function() {
-  console.log('Listening on port %d', server.address().port);
 });
