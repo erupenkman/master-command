@@ -19,6 +19,7 @@ server.listen(envPort, function() {
 });
 
 io.on('connection', function(socket) {
+  console.log('connected');
   //if existing servers are open..
   socket.emit('hello', {
     stopped: master.isStopped()
@@ -85,9 +86,8 @@ app.use(function(req, res, next) {
   next();
 });
 app.options('*', function(req, res) {
-  res.send(' ');
+  res.send('');
 });
-
 //todo: break these out
 app.get('/jquery', function(req, res) {
   res.sendfile(__dirname + '/node_modules/jquery/dist/jquery.js');
