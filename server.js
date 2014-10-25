@@ -72,7 +72,8 @@ io.on('connection', function(socket) {
 });
 
 app.options('*', function(req, res) {
-  res.send('');
+
+  res.send(' ');
 });
 
 //todo: break these out
