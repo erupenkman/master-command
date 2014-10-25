@@ -6,7 +6,7 @@ var express = require('express'),
 
 
 var envPort = process.env.PORT || 8001;
-var server = app.listen(port, function() {
+var server = app.listen(envPort, function() {
   console.log('Listening on port %d', server.address().port);
 });
 
