@@ -5,9 +5,8 @@ var express = require('express'),
 
 
 var envPort = process.env.PORT || 8001;
-var server = app.listen(envPort, function() {
-  console.log('Listening on port %d', server.address().port);
-});
+var server = http.createServer(app);
+
 
 
 var io = require('socket.io').listen(server, {
@@ -96,4 +95,11 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Content-Type");
   res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS");
   next();
+});
+
+
+//app.configure, app.use etc
+
+server.listen(envPort, function() {
+  console.log('Listening on port %d', server.address().port);
 });
