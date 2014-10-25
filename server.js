@@ -13,7 +13,7 @@ var io = require('socket.io').listen(server, {
   origins: '*:*'
 });
 
-var server.listen(envPort, function() {
+server.listen(envPort, function() {
   console.log('Listening on port %d', server.address().port);
 });
 
