@@ -16,7 +16,7 @@
     "test": "istanbul test _mocha --report html -- test/*.js --reporter spec"
   },
   "dependencies": {
-    "socket.io": "1.1.0",
+    "socket.io": "0.9.17",
     "underscore": "1.6.0"
   },
   "devDependencies": {

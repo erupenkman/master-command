@@ -1,5 +1,4 @@
-var express = require('express'),
-  http = require('http'),
+var http = require('http'),
   master = require('./server/master.js');
 
 var envPort = process.env.PORT || 8001;
@@ -7,6 +6,8 @@ var server = http.createServer();
 var io = require('socket.io').listen(server, {
   origins: '*:*'
 });
+
+io.configure
 
 server.listen(envPort, function() {
   console.log('Listening on port %d', server.address().port);
