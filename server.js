@@ -6,12 +6,15 @@ var express = require('express'),
 
 
 var envPort = process.env.PORT || 8001;
-var server = app.listen(envPort, function() {
-  console.log('Listening on port %d', server.address().port);
-});
 
+
+var server = require('http').createServer(app);
 var io = require('socket.io').listen(server, {
   origins: '*:*'
+});
+
+var server.listen(envPort, function() {
+  console.log('Listening on port %d', server.address().port);
 });
 
 io.on('connection', function(socket) {
