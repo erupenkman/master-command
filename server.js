@@ -1,14 +1,14 @@
 var http = require('http'),
-  master = require('./server/master.js');
-
+  master = require('./server/master.js'),
+  express = require('express'),
+  cors = require('cors');
+var app = express();
+app.use(cors())
 var envPort = process.env.PORT || 8001;
-var server = http.createServer();
+var server = http.createServer(app);
 var io = require('socket.io').listen(server, {
   origins: '*:*'
 });
-
-io.configure
-
 server.listen(envPort, function() {
   console.log('Listening on port %d', server.address().port);
 });
@@ -69,4 +69,21 @@ io.on('connection', function(socket) {
     }
     master.reset(data);
   });
+});
+
+
+app.get('/master-scripts/jquery', function(req, res) {
+  res.sendFile(__dirname + '/client/bower_components/jquery/dist/jquery.js');
+});
+app.get('/master-scripts/jquery.cookie', function(req, res) {
+  res.sendFile(__dirname + '/client/bower_components/jquery.cookie/jquery.cookie.js');
+});
+app.get('/master-scripts/socket.js-client', function(req, res) {
+  res.sendFile(__dirname + '/client/bower_components/socket.io-client/socket.io.js');
+});
+app.get('/master-scripts/helpers', function(req, res) {
+  res.sendFile(__dirname + '/client/helpers.js');
+});
+app.get('/master-scripts/master-command', function(req, res) {
+  res.sendFile(__dirname + '/client/master.js');
 });
